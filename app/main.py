@@ -2,7 +2,7 @@ from fastapi import Depends, FastAPI
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import courses
+from app.routers import search_rec_router
 
 app = FastAPI()
 
@@ -12,7 +12,7 @@ app.add_middleware(
 )
 
 
-app.include_router(courses.router)
+app.include_router(search_rec_router.router)
 
 
 @app.get("/")
