@@ -54,4 +54,19 @@ async def update_user_preferences(preferences: UserPreference):
 @routers.post("/recipes/comment", status_code=201)
 async def submit_recipe_feedback(feedback: RecipeComment):
     # user provides comment -> update database
+        async with httpx.AsyncClient() as client:
+        # Construct the payload for the recipe management service
+        payload = feedback.dict()
+        
+        # Send the feedback to the recipe management service
+        response = await client.put(
+            f"{RECIPE_MANAGEMENT_BASE_URL}/recipes_sections/{feedback.recipe_id}/feedback",
+            json=payload
+        )
+        
+        if response.status_code != 200:
+            raise HTTPException(
+                status_code=response.status_code,
+                detail=f"Failed to update feedback in recipe management: {response.text}"
+            )
     return {"message": "Comment submitted successfully", "data": comment.dict()}
