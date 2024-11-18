@@ -52,6 +52,6 @@ async def update_user_preferences(preferences: UserPreference):
     return {"message": "Preferences updated successfully", "data": preferences.dict()}
 
 @routers.post("/recipes/comment", status_code=201)
-async def submit_recipe_feedback(feedback: RecipeFeedback):
+async def submit_recipe_feedback(feedback: RecipeComment):
     # user provides comment -> update database
     return {"message": "Comment submitted successfully", "data": comment.dict()}
