@@ -1,17 +1,36 @@
-from fastapi import APIRouter, Depends
-
-from app.models.search_rec import SearchQuery
-from app.services.search_rec_service import SearchService, RecommendationService
+from fastapi import APIRouter, Depends, Query
+from typing import List, Optional
+from app.models.composite_models import UserPreference, RecipeFeedback, SearchHistory
+from app.resources.recipe_resource import RecipeResource
 
 router = APIRouter()
-search_service = SearchService()
-recommendation_service = RecommendationService()
 
-@router.get("/search/")
-async def search_recipes(search_query: SearchQuery):
-    return search_service.search_recipes(search_query)
-    # TODO Do lifecycle management for singleton resource
+# Dependency injection
+def get_recipe_resource() -> RecipeResource:
+    return RecipeResource(base_url="http://recipe-management-service")
 
-@router.get("/recommendations/{user_id}")
-async def get_recommendations(user_id: int):
-    return recommendation_service.get_recommendations(user_id)
+@routers.get("/recipes/suggestions")
+async def get_aggregated_suggestions(
+    cuisine: Optional[str] = None,
+    dietary_preference: Optional[str] = None,
+    sort_by: str = Query("popularity", enum=["popularity", "recency"]),
+    recipe_resource: RecipeResource = Depends(get_recipe_resource),
+):
+    recipes = recipe_resource.get_paginated_recipes(filter_by=cuisine, limit=100)
+    if dietary_preference:
+        recipes = [r for r in recipes if dietary_preference.lower() in r["content"].lower()]
+    if sort_by == "popularity":
+        recipes = sorted(recipes, key=lambda r: (-r["rating"], r["recipe_name"]))
+    elif sort_by == "recency":
+        recipes = sorted(recipes, key=lambda r: r["create_time"], reverse=True)
+    return recipes[:10]
+
+@routers.put("/preferences")
+async def update_user_preferences(preferences: UserPreference):
+    # Logic to handle preferences can be added here
+    return {"message": "Preferences updated successfully", "data": preferences.dict()}
+
+@routers.post("/recipes/feedback")
+async def submit_recipe_feedback(feedback: RecipeFeedback):
+    # Logic to log feedback
+    return {"message": "Feedback submitted successfully", "data": feedback.dict()}
