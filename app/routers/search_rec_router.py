@@ -37,7 +37,7 @@ async def get_aggregated_suggestions(
 ):
     #Get: Filters by cuisine and diet, sort by popularity and most recent, support pagination with skip and limit
     
-    recipes = recipe_resource.get_paginated_recipes(filter_by=cuisine, limit=100)
+    recipes = recipe_resource.get_paginated(filter_by=cuisine, limit=100)
     if dietary_preference:
         recipes = [r for r in recipes if dietary_preference.lower() in r["content"].lower()]
     if sort_by == "popularity":
