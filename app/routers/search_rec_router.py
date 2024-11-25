@@ -54,7 +54,7 @@ async def update_user_preferences(preferences: UserPreference):
 @routers.post("/recipes/comment", status_code=201)
 async def submit_recipe_feedback(feedback: RecipeComment):
     # user provides comment -> update database
-        async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient() as client:
         # Construct the payload for the recipe management service
         payload = feedback.dict()
         
