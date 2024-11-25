@@ -11,7 +11,7 @@ class Recommendation(BaseModel):
     recommended_recipes: List[int]
 
 #new classes for composite service
-class UserPreference(BaseModel):
+class UserPreferences(BaseModel):
     exclude_ingredients: Optional[List[str]] = None
     preferred_tags: Optional[List[str]] = None
 
