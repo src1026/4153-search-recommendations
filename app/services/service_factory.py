@@ -1,5 +1,5 @@
 from framework.services.service_factory import BaseServiceFactory
-import app.resources.course_resource as course_resource
+#import app.resources.course_resource as course_resource
 from framework.services.data_access.MySQLRDBDataService import MySQLRDBDataService
 
 
