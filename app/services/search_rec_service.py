@@ -1,4 +1,4 @@
-from app.models.search_rec import SearchQuery, Recommendation
+from app.models.search_rec import SearchQuery, Recommendation, UserPreferences
 
 class SearchService:
     def __init__(self):
@@ -24,6 +24,6 @@ class UserPreferencesService:
         self.dynamodb = boto3.resource('dynamodb', region_name='us-west-2')
         self.table = self.dynamodb.Table('Preferences')
 
-    def get_recommendations(self, user_id: int):
+    def get_userpreferences(self, user_id: int):
         response = self.table.get_item(Key={'user_id': user_id})
         return response.get('Item', {"user_preferences": []})
