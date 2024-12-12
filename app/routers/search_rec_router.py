@@ -16,8 +16,9 @@ async def fetch_paginated_recipes(skip: int = 0, limit: int = 10, filter_by: Opt
         response = await client.get(f"{RECIPE_MANAGEMENT_BASE_URL}/recipes_sections", params=params)
         if response.status_code != 200:
             raise HTTPException(status_code=response.status_code, detail="Failed to fetch recipes")
-        recipes = response.json()
-        return [RecipeSection(**recipe) for recipe in recipes]  # Validate with RecipeSection model
+        recipes = [RecipeSection(**recipe) for recipe in data["data"]]
+        total_count = data["pagination"]["total_count"]
+        return recipes, total_count
 
 async def fetch_recipe_by_id(recipe_id: str):
     """Fetch a specific recipe by ID."""
@@ -37,13 +38,13 @@ async def get_aggregated_suggestions(
 ):
     #Get: Filters by cuisine and diet, sort by popularity and most recent, support pagination with skip and limit
     
-    recipes = recipe_resource.get_paginated(filter_by=cuisine, limit=100)
+    recipes, total_count = await fetch_paginated_recipes(skip=skip, limit=limit, filter_by=cuisine)
     if dietary_preference:
-        recipes = [r for r in recipes if dietary_preference.lower() in r["content"].lower()]
+        recipes = [r for r in recipes if dietary_preference.lower() in r.content.lower()]
     if sort_by == "popularity":
-        recipes = sorted(recipes, key=lambda r: (-r["rating"], r["recipe_name"]))
+        recipes = sorted(recipes, key=lambda r: (-r.rating, r.recipe_name))
     elif sort_by == "recency":
-        recipes = sorted(recipes, key=lambda r: r["create_time"], reverse=True)
+        recipes = sorted(recipes, key=lambda r: r.create_time, reverse=True)
     return recipes[:10]
 
 @routers.put("/preferences")
