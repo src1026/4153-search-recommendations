@@ -9,3 +9,18 @@ class SearchQuery(BaseModel):
 class Recommendation(BaseModel):
     user_id: int
     recommended_recipes: List[int]
+
+#new classes for composite service
+class UserPreferences(BaseModel):
+    exclude_ingredients: Optional[List[str]] = None
+    preferred_tags: Optional[List[str]] = None
+
+class RecipeComment(BaseModel):
+    recipe_id: int
+    comment: str
+    rating: Optional[float] = None
+
+class SearchHistory(BaseModel):
+    user_id: int
+    query: str
+
