@@ -24,3 +24,17 @@ class SearchHistory(BaseModel):
     user_id: int
     query: str
 
+class RecipeSection(BaseModel):
+    recipe_id: int
+    recipe_name: str
+    content: str
+    create_time: Optional[str]
+    likes: Optional[int] = 0
+
+class RecipeCollection(BaseModel):
+    name: str
+    recipe_ids: List[int]
+
+class UserCollection(BaseModel):
+    name: str
+    recipe_ids: List[int]

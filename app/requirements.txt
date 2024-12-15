@@ -1,0 +1,5 @@
+fastapi
+httpx
+uvicorn
+pydantic
+boto3  # if using DynamoDB
