@@ -3,7 +3,10 @@ import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import search_rec_router
 
-app = FastAPI()
+app = FastAPI(
+    title="Search and Recommendation API",
+    description="API for managing user searched and recommendations"
+)
 
 app.add_middleware(
     CORSMiddleware,

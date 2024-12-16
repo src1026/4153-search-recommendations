@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Query, HTTPException, status
 from typing import List, Optional
 from pydantic import BaseModel
 from app.models.search_rec import UserPreferences, SearchHistory, RecipeComment
@@ -41,7 +41,34 @@ async def get_like_counts(recipe_ids: List[int]):
             raise HTTPException(status_code=response.status_code, detail="Failed to fetch like counts")
         return response.json()
 
-@router.get("/recipes/suggestions", response_model=List[RecipeSection])
+@router.get("/recipes/suggestions", 
+            response_model=List[RecipeSection],
+            tags=["Recipes"],
+            status_code=status.HTTP_200_OK,
+            summary="Get recipe suggestions",
+            description="Retrieve suggestions based on cuisine, dietary preference, and sort by popularity.",
+            responses={
+        200: {
+            "description": "Successfully retrieved recipe suggestions",
+            "content": {
+                "application/json": {
+                    "example": [
+                        {
+                            "recipe_id": 1,
+                            "recipe_name": "Pasta",
+                            "content": "Boil pasta, cook sauce, mix ingredients.",
+                            "cuisine_id": 2,
+                            "likes": 42,
+                            "create_time": "2024-01-01T12:00:00"
+                        }
+                    ]
+                }
+            }
+        },
+        400: {"description": "Invalid input data"},
+        500: {"description": "Failed to fetch recipes"}
+    }
+)
 async def get_aggregated_suggestions(
     cuisine: Optional[str] = None,
     dietary_preference: Optional[str] = None,
@@ -67,17 +94,16 @@ async def get_aggregated_suggestions(
 
     return recipes[:limit]
 
-'''
-@router.put("/preferences")
-async def update_user_preferences(user_id: int, preferences: UserPreference):
-    """Update user preferences."""
-    success = await user_interaction_resource.update_user_preferences(user_id, preferences.dict())
-    if not success:
-        raise HTTPException(status_code=400, detail="Failed to update preferences")
-    return {"message": "Preferences updated successfully"}
-'''
-
-@router.put("/preferences")
+@router.put("/preferences",
+            tags=["User Preferences"],
+            status_code=status.HTTP_200_OK,
+            summary="Update user preferences",
+            description="Update user preferences such as cuisine or dietary restrictions.",
+            responses={
+                200: {"description": "Preferences updated successfully"},
+                400: {"description": "Failed to update preferences"}
+            }
+)
 async def update_user_preferences(user_id: int, preferences: UserPreferences):
     async with httpx.AsyncClient() as client:
         response = await client.put(f"{USER_INTERACTION_BASE_URL}/preferences/{user_id}", json=preferences.dict())
@@ -86,7 +112,16 @@ async def update_user_preferences(user_id: int, preferences: UserPreferences):
     return {"message": "Preferences updated successfully"}
 
 
-@router.post("/recipes/comment", status_code=201)
+@router.post("/recipes/comment", 
+             tags=["Recipes"],
+             status_code=status.HTTP_201_CREATED,
+             summary="Submit recipe feedback",
+             description="Add feedback or a comment for a recipe.",
+             responses={
+                 201: {"description": "Comment submitted successfully"},
+                 500: {"description": "Failed to submit feedback"}
+             }
+)
 async def submit_recipe_feedback(feedback: RecipeComment):
     async with httpx.AsyncClient() as client:
         response = await client.put(
@@ -97,7 +132,15 @@ async def submit_recipe_feedback(feedback: RecipeComment):
             raise HTTPException(status_code=response.status_code, detail="Failed to submit feedback")
     return {"message": "Comment submitted successfully"}
 
-@router.post("/collections", status_code=201)
+@router.post("/collections", 
+             status_code=status.HTTP_201_CREATED,
+             summary="Create a collection",
+             description="Create a collection of recipes under the user account with unique user ID.",
+             responses={
+                 201: {"description": "Collection created successfully"},
+                 500: {"description": "Failed to create collection"}
+             }
+             )
 async def create_recipe_collection(user_id: int, collection: UserCollection):
     async with httpx.AsyncClient() as client:
         response = await client.post(f"{USER_INTERACTION_BASE_URL}/collections/{user_id}", json=collection.dict())
@@ -105,7 +148,30 @@ async def create_recipe_collection(user_id: int, collection: UserCollection):
             raise HTTPException(status_code=400, detail="Failed to create collection")
     return {"message": "Collection created successfully"}
 
-@router.get("/recipes/explore", response_model=List[RecipeSection])
+@router.get("/recipes/explore", 
+            response_model=List[RecipeSection],
+            tags=["Recipes"],
+            summary="Explore recipes",
+            description="Discover recipes by category.",
+            responses={
+                200: {
+                    "description": "Successfully fetched explore recipes",
+                    "content": {
+                        "application/json": {
+                            "example": [
+                                {
+                                    "recipe_id": 1,
+                                    "recipe_name": "Pasta",
+                                    "content": "Boil pasta, cook sauce, mix ingredients.",
+                                    "likes": 42,
+                                    "create_time": "2023-12-01T09:00:00"
+                                }
+                            ]
+                        }
+                    }
+                },
+                500: {"description": "Failed to fetch explore recipes"}
+            })
 async def explore_recipes(category: Optional[str] = None):
     async with httpx.AsyncClient() as client:
         params = {"category": category}
@@ -114,15 +180,32 @@ async def explore_recipes(category: Optional[str] = None):
             raise HTTPException(status_code=500, detail="Failed to fetch explore recipes")
     return response.json()
 
-@router.put("/recipes/feedback")
+@router.put("/recipes/feedback",
+            tags=["Recipes"],
+            status_code=status.HTTP_201_CREATED,
+            summary="Submit comment to recipe",
+            description="Add a comment under a recipe.",
+            responses={
+                201: {"description": "Comment submitted successfully."},
+                500: {"description": "Failed to post comment."}
+            }
+)
 async def log_recipe_feedback(feedback: RecipeComment):
     async with httpx.AsyncClient() as client:
         response = await client.put(f"{RECIPE_MANAGEMENT_BASE_URL}/recipes/{feedback.recipe_id}/feedback", json=feedback.dict())
         if response.status_code != 200:
-            raise HTTPException(status_code=500, detail="Failed to log feedback.")
-    return {"message": "Feedback logged successfully"}
+            raise HTTPException(status_code=500, detail="Failed to post comment.")
+    return {"message": "Comment logged successfully"}
 
-@router.post("/search-history", status_code=201)
+@router.post("/search-history", 
+             status_code=status.HTTP_201_CREATED,
+             summary="Save search history",
+             description="Save a user's search history.",
+             responses={
+                201: {"description": "Search history saved successfully."},
+                500: {"description": "Failed to save search history."}
+            }
+)
 async def save_search_history(search: SearchHistory):
     async with httpx.AsyncClient() as client:
         response = await client.post(f"{USER_INTERACTION_BASE_URL}/search-history", json=search.dict())
